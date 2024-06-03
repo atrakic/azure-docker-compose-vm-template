@@ -1,0 +1,11 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  watchtower-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger api update
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}" ${{ secrets.WATCHTOWER_API }}
