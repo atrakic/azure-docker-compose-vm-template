@@ -1,0 +1,73 @@
+services:
+  api:
+    image: ${API_IMAGE}:${API_RELEASE:-latest}
+    container_name: api
+    environment:
+      VIRTUAL_PORT: ${API_VIRTUAL_PORT:-5000}
+      VIRTUAL_HOST: ${API_VIRTUAL_HOST:-}
+      LETSENCRYPT_HOST: ${API_LETSENCRYPT_HOST:-}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    expose:
+      - ${API_VIRTUAL_PORT:-5000}
+    healthcheck:
+      test: curl -sf -X 'GET' http://localhost:${API_VIRTUAL_PORT:-8080}/healthz || exit 1
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+
+  ## Core infra ##
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:${NGINX_PROXY_RELEASE:-1.4}
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion:${ACME_RELEASE:-latest}
+    container_name: nginx-proxy-acme
+    environment:
+      - DEFAULT_EMAIL=${DEFAULT_EMAIL:-mail@yourdomain.tld}
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  watchtower:
+    image: containrrr/watchtower:${WT_RELEASE:-latest}
+    container_name: watchtower
+    restart: unless-stopped
+    command: --interval 86400 --http-api-update --http-api-periodic-polls
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      VIRTUAL_PORT: ${WT_VIRTUAL_PORT:-8080}
+      VIRTUAL_HOST: ${WT_VIRTUAL_HOST:-}
+      LETSENCRYPT_HOST: ${WT_LETSENCRYPT_HOST:-}
+      WATCHTOWER_HTTP_API_TOKEN: "${WATCHTOWER_HTTP_API_TOKEN}"
+      WATCHTOWER_NOTIFICATION_URL: "${WATCHTOWER_NOTIFICATION_URL:-}"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    expose:
+      - ${WT_VIRTUAL_PORT:-8080}
+
+networks:
+  default:
+    name: proxy
+
+volumes:
+  conf:
+  vhost:
+  html:
+  certs:
+  acme:
