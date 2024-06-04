@@ -136,7 +136,7 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-0
       {
         name: 'WT-API'
         properties: {
-          priority: 1000
+          priority: 1003
           access: 'Allow'
           direction: 'Inbound'
           destinationPortRange: '8080'
