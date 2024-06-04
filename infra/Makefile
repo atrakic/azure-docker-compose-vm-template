@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-vmName?=demo
+vmName?=dstack
 rgName?=rg-vm-$(vmName)
 adminUsername?=$(shell whoami)
 location?=northeurope
