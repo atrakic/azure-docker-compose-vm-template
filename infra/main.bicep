@@ -133,19 +133,6 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2023-09-0
           destinationAddressPrefix: '*'
         }
       }
-      {
-        name: 'WT-API'
-        properties: {
-          priority: 1003
-          access: 'Allow'
-          direction: 'Inbound'
-          destinationPortRange: '8080'
-          protocol: 'Tcp'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-        }
-      }
     ]
   }
 }
@@ -264,4 +251,5 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' =
 
 output adminUsername string = adminUsername
 output hostname string = publicIPAddress.properties.dnsSettings.fqdn
-// output sshCommand string = 'ssh -i ~/.ssh/id_rsa ${adminUsername}@${publicIPAddress.properties.dnsSettings.fqdn}'
+output vmPublicIPAddress string = publicIPAddress.properties.ipAddress
+output sshCommand string = 'ssh -i ~/.ssh/id_rsa ${adminUsername}@${publicIPAddress.properties.dnsSettings.fqdn}'

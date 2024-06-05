@@ -4,6 +4,6 @@
 
 ## Features
 - Lets encrypt auto provisioning
-- Automated image update 
+- Automated image update
 - Monitoring (Grafana/Prometheus)
 - Nginx proxy

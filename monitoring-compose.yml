@@ -1,7 +1,6 @@
 name: monitoring
 
 services:
-
   grafana:
     build:
       context: monitoring/grafana/
@@ -14,7 +13,6 @@ services:
       - ./monitoring/grafana/config/provisioning/:/etc/grafana/provisioning/
     env_file:
       - ./monitoring/grafana/config/config.monitoring
-    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -30,7 +28,7 @@ services:
     networks:
       - monitoring
       - default
-      
+
   prometheus:
     build:
       context: monitoring/prometheus/
@@ -46,7 +44,6 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     depends_on:
       - cadvisor
-    restart: unless-stopped
     logging:
       driver: json-file
       options:
@@ -103,7 +100,6 @@ services:
       - '--path.sysfs=/host/sys'
       - --collector.filesystem.ignored-mount-points
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    restart: unless-stopped
     logging:
       driver: json-file
       options:
