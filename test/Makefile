@@ -1,7 +1,11 @@
+MAKEFLAGS += --silent
+
+.PHONY: all clean
+
 all: clean
-	docker compose up -d --remove-orphans
+	docker compose up --build --remove-orphans -d
 	docker exec nginx-proxy nginx -T
-	curl -o /dev/null -H "Host: whoami.example" localhost
+	curl -s -o /dev/null -H "Host: whoami.example" localhost
 	#while ! curl -o /dev/null -sf localhost;do sleep 1; done
 	while ! \
 		[[ "$$(docker inspect --format "{{json .State.Health }}" nginx | jq -r ".Status")" == "healthy" ]];\

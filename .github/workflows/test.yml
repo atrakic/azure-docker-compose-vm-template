@@ -1,0 +1,24 @@
+name: Test compose
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - '*' # All branches
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    test-compose:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Run tests
+              run: |
+                cd ./test
+                make
+                make clean
