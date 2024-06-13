@@ -249,6 +249,7 @@ resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' =
   }
 }
 
+output location string = location
 output adminUsername string = adminUsername
 output hostname string = publicIPAddress.properties.dnsSettings.fqdn
 output vmPublicIPAddress string = publicIPAddress.properties.ipAddress
