@@ -2,7 +2,7 @@ name: utilities
 services:
   sonarqube:
     build:
-      context: utilities/sonarqube/
+      context: docker/utilities/sonarqube/
     container_name: sonarqube
     depends_on:
       - sonarqube-db

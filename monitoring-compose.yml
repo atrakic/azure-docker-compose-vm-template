@@ -3,16 +3,16 @@ name: monitoring
 services:
   grafana:
     build:
-      context: monitoring/grafana/
+      context: ./docker/monitoring/grafana/
     container_name: grafana
     user: "104"
     depends_on:
       - prometheus
     volumes:
       - grafana:/var/lib/grafana
-      - ./monitoring/grafana/config/provisioning/:/etc/grafana/provisioning/
+      - ./docker/monitoring/grafana/config/provisioning/:/etc/grafana/provisioning/
     env_file:
-      - ./monitoring/grafana/config/config.monitoring
+      - ./docker/monitoring/grafana/config/config.monitoring
     logging:
       driver: json-file
       options:
@@ -31,10 +31,10 @@ services:
 
   prometheus:
     build:
-      context: monitoring/prometheus/
+      context: ./docker/monitoring/prometheus/
     container_name: prometheus
     volumes:
-      - ./monitoring/prometheus/config/:/etc/prometheus/
+      - ./docker/monitoring/prometheus/config/:/etc/prometheus/
       - prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -54,7 +54,7 @@ services:
 
   cadvisor:
     build:
-      context: monitoring/cadvisor/
+      context: ./docker/monitoring/cadvisor/
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -71,10 +71,10 @@ services:
 
   alertmanager:
     build:
-      context: monitoring/alertmanager/
+      context: ./docker/monitoring/alertmanager/
     container_name: alertmanager
     volumes:
-      - ./monitoring/alertmanager/config/:/etc/alertmanager/
+      - ./docker/monitoring/alertmanager/config/:/etc/alertmanager/
     restart: unless-stopped
     command:
       - '--config.file=/etc/alertmanager/config.yml'
@@ -89,7 +89,7 @@ services:
 
   node-exporter:
     build:
-      context: monitoring/node-exporter/
+      context: ./docker/monitoring/node-exporter/
     container_name: node-exporter
     volumes:
       - "/proc:/host/proc:ro"

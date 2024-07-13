@@ -8,6 +8,11 @@ services:
       LETSENCRYPT_HOST: ${API_LETSENCRYPT_HOST:-}
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
   nginx-proxy:
     image: nginxproxy/nginx-proxy:${NGINX_PROXY_RELEASE:-1.4}
@@ -23,11 +28,13 @@ services:
       - certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
-  nginx-proxy-acme:
+  letsencrypt:
     image: nginxproxy/acme-companion:${ACME_RELEASE:-latest}
     container_name: nginx-proxy-acme
     environment:
       DEFAULT_EMAIL: ${DEFAULT_EMAIL:-mail@yourdomain.tld}
+    depends_on:
+      - nginx-proxy
     volumes_from:
       - nginx-proxy
     volumes:
