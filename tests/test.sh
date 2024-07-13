@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -exo pipefail
 
 SCRIPT_ROOT=$(dirname "${BASH_SOURCE[0]}")
 
@@ -13,12 +13,16 @@ docker compose version
 docker compose config --quiet
 
 docker compose -f docker-compose.yml -f apps.yml up --build --remove-orphans -d
-docker compose -f docker-compose.yml -f apps.yml ps -a
+#docker compose -f docker-compose.yml -f apps.yml ps -a
 
 docker exec nginx-proxy nginx -T
+docker exec letsencrypt /app/cert_status
 
 #while ! curl -o /dev/null -sf localhost;do sleep 1; done
 wait_for_healthy_container ${container}
+
+docker compose -f docker-compose.yml -f apps.yml top
+docker compose -f docker-compose.yml -f apps.yml stats --no-stream
 
 curl -fisk -H "Authorization: Bearer ${token}" -H "Host: watchtower.localhost" localhost/v1/update
 curl -fisk -H "Host: api.localhost" localhost
