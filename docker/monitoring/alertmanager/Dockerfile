@@ -1,1 +1,1 @@
-FROM prom/alertmanager:latest
+FROM prom/alertmanager:${ALERTMANAGER_VERSION:-latest}

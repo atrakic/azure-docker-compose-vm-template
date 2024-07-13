@@ -19,15 +19,12 @@ services:
         max-size: "4m"
         max-file: "10"
     environment:
-      - VIRTUAL_HOST=${GRAFANA_VIRTUAL_HOST:-}
-      - VIRTUAL_PORT=${GRAFANA_PORT:-3000}
-      - LETSENCRYPT_HOST=${GRAFANA_LETSENCRYPT_HOST:-}
-      - LETSENCRYPT_EMAIL=${GRAFANA_LETSENCRYPT_EMAIL:-}
-    ports:
-      - ${GRAFANA_PORT:-3000}:3000
-    networks:
-      - monitoring
-      - default
+      VIRTUAL_HOST: ${GRAFANA_VIRTUAL_HOST:-grafana.localhost}
+      VIRTUAL_PORT: ${GRAFANA_PORT:-3000}
+      LETSENCRYPT_HOST: ${GRAFANA_LETSENCRYPT_HOST:-}
+      LETSENCRYPT_EMAIL: ${GRAFANA_LETSENCRYPT_EMAIL:-}
+    expose:
+      - ${GRAFANA_PORT:-3000}
 
   prometheus:
     build:
@@ -42,6 +39,10 @@ services:
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-14d}'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+    environment:
+      VIRTUAL_PORT: ${PROMETHEUS_VIRTUAL_PORT:-9090}
+      VIRTUAL_HOST: ${PROMETHEUS_VIRTUAL_HOST:-prometheus.localhost}
+      LETSENCRYPT_HOST: ${PROMETHEUS_LETSENCRYPT_HOST:-}
     depends_on:
       - cadvisor
     logging:
@@ -49,8 +50,8 @@ services:
       options:
         max-size: "4m"
         max-file: "10"
-    networks:
-      - monitoring
+    expose:
+      - ${PROMETHEUS_VIRTUAL_PORT:-9090}
 
   cadvisor:
     build:
@@ -58,16 +59,17 @@ services:
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:rw
+      - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
     logging:
       driver: json-file
       options:
         max-size: "4m"
         max-file: "10"
-    networks:
-      - monitoring
+    expose:
+      - 8080
 
   alertmanager:
     build:
@@ -84,36 +86,19 @@ services:
       options:
         max-size: "4m"
         max-file: "10"
-    networks:
-      - monitoring
 
   node-exporter:
     build:
       context: ./docker/monitoring/node-exporter/
     container_name: node-exporter
-    volumes:
-      - "/proc:/host/proc:ro"
-      - "/sys:/host/sys:ro"
-      - "/:/rootfs:ro"
+    restart: unless-stopped
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - --collector.filesystem.ignored-mount-points
-      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
-    logging:
-      driver: json-file
-      options:
-        max-size: "4m"
-        max-file: "10"
-    networks:
-      - monitoring
+      - '--path.rootfs=/host'
+    #network_mode: host
+    pid: host
+    volumes:
+      - '/:/host:ro,rslave'
 
 volumes:
   prometheus:
   grafana:
-
-networks:
-  monitoring:
-  default:
-    external: true
-    name: proxy

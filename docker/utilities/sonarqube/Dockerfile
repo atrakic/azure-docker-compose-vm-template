@@ -1,1 +1,1 @@
-FROM sonarqube:lts-community
+FROM sonarqube:${SONARQUBE_VERSION:-lts-community}

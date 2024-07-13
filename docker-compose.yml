@@ -1,36 +1,26 @@
 services:
-  api:
-    image: ${API_IMAGE:-ghcr.io/atrakic/azure-go-app}:${API_RELEASE:-latest}
-    container_name: api
-    environment:
-      VIRTUAL_PORT: ${API_VIRTUAL_PORT:-5000}
-      VIRTUAL_HOST: ${API_VIRTUAL_HOST:-}
-      LETSENCRYPT_HOST: ${API_LETSENCRYPT_HOST:-}
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    healthcheck:
-      test: ["CMD", "/usr/bin/wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-
   nginx-proxy:
-    image: nginxproxy/nginx-proxy:${NGINX_PROXY_RELEASE:-1.4}
+    image: nginxproxy/nginx-proxy:${NGINX_PROXY_RELEASE:-1.6}
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - NO_COLOR=1
     volumes:
-      - conf:/etc/nginx/conf.d
-      - vhost:/etc/nginx/vhost.d
+      # The vhost volume is only required if you
+      # plan to obtain standalone certificates
+      # - vhost:/etc/nginx/vhost.d
+      #- conf:/etc/nginx/conf.d
       - html:/usr/share/nginx/html
       - certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./docker/nginx/config/nginx.conf:/etc/nginx/conf.d/my_proxy.conf:ro
 
   letsencrypt:
     image: nginxproxy/acme-companion:${ACME_RELEASE:-latest}
-    container_name: nginx-proxy-acme
+    container_name: letsencrypt
     environment:
       DEFAULT_EMAIL: ${DEFAULT_EMAIL:-mail@yourdomain.tld}
     depends_on:
@@ -54,25 +44,23 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      WATCHTOWER_HTTP_API_TOKEN: "${WATCHTOWER_HTTP_API_TOKEN:-'$$RANDOM'}"
-      WATCHTOWER_NOTIFICATION_URL: "${WATCHTOWER_NOTIFICATION_URL:-}"
-      VIRTUAL_PORT: ${WATCHTOWER_VIRTUAL_PORT:-8080}
-      VIRTUAL_HOST: ${WATCHTOWER_VIRTUAL_HOST:-}
       LETSENCRYPT_HOST: ${WATCHTOWER_LETSENCRYPT_HOST:-}
+      VIRTUAL_HOST: ${WATCHTOWER_VIRTUAL_HOST:-watchtower.localhost}
+      VIRTUAL_PORT: ${WATCHTOWER_VIRTUAL_PORT:-8080}
+      WATCHTOWER_HTTP_API_TOKEN: ${WATCHTOWER_HTTP_API_TOKEN:-a55fab18d2466e18}
+      #WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
       #- WATCHTOWER_ROLLING_RESTART=true
       #- WATCHTOWER_NOTIFICATIONS=msteams
       #- WATCHTOWER_NOTIFICATION_MSTEAMS_USE_LOG_DATA=true
       #- WATCHTOWER_NOTIFICATION_MSTEAMS_HOOK_URL="https://outlook.office.com/webhook/xxxxxxxx@xxxxxxx/IncomingWebhook/yyyyyyyy/zzzzzzzzzz" \
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
-
-networks:
-  default:
-    name: proxy
+    expose:
+      - ${WATCHTOWER_VIRTUAL_PORT:-8080}
 
 volumes:
   conf:
-  vhost:
+  #vhost:
   html:
   certs:
   acme:

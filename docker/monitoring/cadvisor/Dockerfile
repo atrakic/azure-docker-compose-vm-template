@@ -1,1 +1,1 @@
-FROM gcr.io/google-containers/cadvisor:latest
+FROM gcr.io/google-containers/cadvisor:${CADVISOR_VERSION:-latest}
