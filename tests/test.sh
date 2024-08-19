@@ -28,4 +28,4 @@ curl -fisk -H "Authorization: Bearer ${token}" -H "Host: watchtower.localhost" l
 curl -fisk -H "Host: api.localhost" localhost
 
 #clean:
-docker-compose down --remove-orphans -v --rmi local
+docker compose down --remove-orphans -v --rmi local
