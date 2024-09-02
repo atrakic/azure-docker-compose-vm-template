@@ -10,13 +10,13 @@ source "${SCRIPT_ROOT}"/test-functions.sh
 docker compose version
 docker compose config --quiet
 
-## Build the images
+## Build utility-stack images (dont start them)
 docker compose \
     -f ollama-compose.yml \
     -f sonarqube-compose.yml \
     -f monitoring-compose.yml build
 
-## Start reverse proxy incl. our services using some pinned version
+## Start reverse proxy incl. main services using some pinned version
 API_RELEASE=latest \
     docker compose \
     -f docker-compose.yml \
@@ -31,13 +31,14 @@ wait_for_healthy_container ${container}
 docker exec nginx-proxy nginx -T
 docker exec letsencrypt /app/cert_status
 
-docker compose -f docker-compose.yml -f apps.yml top
-docker compose -f docker-compose.yml -f apps.yml stats --no-stream
-
 # Simulate a new version update
-curl -fisk -H "Authorization: Bearer ${WATCHTOWER_HTTP_API_TOKEN}" -H "Host: watchtower.localhost" localhost/v1/update
+curl -fisk -H "Authorization: Bearer ${WATCHTOWER_HTTP_API_TOKEN}" -H "Host: ${WATCHTOWER_VIRTUAL_HOST}" localhost/v1/update
 wait_for_healthy_container ${container}
 curl -fisk -H "Host: api.localhost" localhost
+
+## Get logs
+docker compose -f docker-compose.yml -f apps.yml top
+docker compose -f docker-compose.yml -f apps.yml stats --no-stream
 
 # Clean up
 docker compose \
@@ -46,3 +47,5 @@ docker compose \
     -f monitoring-compose.yml \
     -f apps.yml \
     -f docker-compose.yml down --remove-orphans -v --rmi local
+
+docker system prune -f

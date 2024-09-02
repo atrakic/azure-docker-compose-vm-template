@@ -9,6 +9,7 @@ services:
   ollama:
     build:
       context: ./docker/utilities/ollama/
+    image: ollama.local
     container_name: ollama
     environment:
       VIRTUAL_PORT: ${OLLAMA_VIRTUAL_PORT:-11434}

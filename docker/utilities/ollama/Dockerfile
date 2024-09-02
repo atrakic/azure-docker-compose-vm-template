@@ -3,5 +3,5 @@ ARG OLAMA_TAG=latest
 
 FROM ollama/ollama:${OLAMA_TAG}
 
-# Install models
-#RUN ollama pull codellama
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/
+ENTRYPOINT ["entrypoint.sh"]

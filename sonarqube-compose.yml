@@ -4,8 +4,7 @@ services:
     build:
       context: ./docker/utilities/sonarqube/
     container_name: sonarqube
-    depends_on:
-      - sonarqube-db
+    env_file: .env
     environment:
       VIRTUAL_PORT: ${SONARQUBE_VIRTUAL_PORT:-9000}
       VIRTUAL_HOST: ${SONARQUBE_VIRTUAL_HOST:-sonarqube.localhost}
@@ -13,6 +12,8 @@ services:
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonar
       SONAR_JDBC_USERNAME: sonar
       SONAR_JDBC_PASSWORD: sonar
+    depends_on:
+      - sonarqube-db
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
     volumes:

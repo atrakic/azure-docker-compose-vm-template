@@ -4,6 +4,7 @@ services:
   grafana:
     build:
       context: ./docker/monitoring/grafana/
+    image: grafana.wtf
     container_name: grafana
     user: "104"
     depends_on:
@@ -12,6 +13,7 @@ services:
       - grafana:/var/lib/grafana
       - ./docker/monitoring/grafana/config/provisioning/:/etc/grafana/provisioning/
     env_file:
+      - .env
       - ./docker/monitoring/grafana/config/config.monitoring
     logging:
       driver: json-file
@@ -29,6 +31,7 @@ services:
   prometheus:
     build:
       context: ./docker/monitoring/prometheus/
+    image: prometheus.wtf
     container_name: prometheus
     volumes:
       - ./docker/monitoring/prometheus/config/:/etc/prometheus/
@@ -39,6 +42,7 @@ services:
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-14d}'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+    env_file: .env
     environment:
       VIRTUAL_PORT: ${PROMETHEUS_VIRTUAL_PORT:-9090}
       VIRTUAL_HOST: ${PROMETHEUS_VIRTUAL_HOST:-prometheus.localhost}
@@ -56,6 +60,7 @@ services:
   cadvisor:
     build:
       context: ./docker/monitoring/cadvisor/
+    image: cadvisor.wtf
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -74,6 +79,7 @@ services:
   alertmanager:
     build:
       context: ./docker/monitoring/alertmanager/
+    image: alertmanager.wtf
     container_name: alertmanager
     volumes:
       - ./docker/monitoring/alertmanager/config/:/etc/alertmanager/
@@ -90,6 +96,7 @@ services:
   node-exporter:
     build:
       context: ./docker/monitoring/node-exporter/
+    image: node-exporter.wtf
     container_name: node-exporter
     restart: unless-stopped
     command:
