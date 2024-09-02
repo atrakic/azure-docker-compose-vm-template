@@ -1,4 +1,4 @@
-name: utilities
+name: sonarqube
 services:
   sonarqube:
     build:
@@ -20,7 +20,7 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
     networks:
-      - utilities
+      - sonarqube
       - default
     expose:
       - ${SONARQUBE_VIRTUAL_PORT:-9000}
@@ -34,7 +34,7 @@ services:
       - postgresql:/var/lib/postgresql
       - sonar_db_data:/var/lib/postgresql/data
     networks:
-      - utilities
+      - sonarqube
 
 volumes:
   sonarqube_data:
@@ -48,7 +48,7 @@ volumes:
       device: tmpfs
 
 networks:
-  utilities:
+  sonarqube:
   default:
     external: true
     name: proxy

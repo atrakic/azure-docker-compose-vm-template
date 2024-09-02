@@ -41,6 +41,7 @@ runcmd:
     docker pull -q nginxproxy/nginx-proxy
     docker pull -q nginxproxy/acme-companion
     docker pull -q containrrr/watchtower
+    docker network create proxy
     cd /var/tmp
     git clone --depth 1 https://github.com/atrakic/azure-docker-compose-vm-template.git
     cd azure-docker-compose-vm-template

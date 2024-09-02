@@ -1,0 +1,35 @@
+---
+
+## Usage:
+# docker exec ollama ollama run codellama "Code: print('Hello, World!')"
+
+name: ollama
+
+services:
+  ollama:
+    build:
+      context: ./docker/utilities/ollama/
+    container_name: ollama
+    environment:
+      VIRTUAL_PORT: ${OLLAMA_VIRTUAL_PORT:-11434}
+      VIRTUAL_HOST: ${OLLAMA_VIRTUAL_HOST:-ollama.localhost}
+      LETSENCRYPT_HOST: ${OLLAMA_LETSENCRYPT_HOST:-}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ollama
+      - default
+    expose:
+      - ${OLLAMA_VIRTUAL_PORT:-11434}
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  ollama:
+  default:
+    external: true
+    name: proxy
