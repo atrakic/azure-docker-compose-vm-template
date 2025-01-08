@@ -3,12 +3,12 @@ name: Scan Bicep code
 on:
   workflow_dispatch:
   push:
-    branches: 
+    branches:
       - main
     paths:
       - "infra/**"
   pull_request:
-    branches: 
+    branches:
       - main
     paths:
       - "infra/**"

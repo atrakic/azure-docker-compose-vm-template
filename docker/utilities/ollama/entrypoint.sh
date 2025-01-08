@@ -10,7 +10,7 @@ pid=$!
 sleep 5
 
 echo "Retrieve codellama model..."
-ollama pull codellama 
+ollama pull codellama
 
 # Wait for Ollama process to finish.
 wait $pid
