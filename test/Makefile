@@ -5,7 +5,7 @@ SHELL := /bin/bash
 
 all: clean
 	docker compose version
-	docker compose up --build --remove-orphans -d
+	docker compose up --quiet-pull --no-color --build --remove-orphans -d
 	docker exec nginx-proxy nginx -T
 	curl -s -o /dev/null -H "Host: api.example" localhost
 	#while ! curl -o /dev/null -sf localhost;do sleep 1; done

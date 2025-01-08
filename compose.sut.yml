@@ -1,0 +1,27 @@
+services:
+  sut:
+    image: curlimages/curl:latest
+    tty: true
+    command: 
+      - /bin/sh
+      - -c
+      - |
+        timeout 10 sh -c 'while ! curl -s http://api:$$PORT; do echo "Waiting for API service..."; sleep 1; done'
+        if [ $? -eq 124 ]; then 
+          echo 'Timeout reached, exiting...'
+        else 
+          echo 'API service is up and running!'
+        fi
+        if [ -n "$SUT_DEBUG" ];then tail -f /dev/null; fi
+    environment:
+      PORT: 4000
+      SUT_DEBUG: "${SUT_DEBUG:-}"
+    networks:
+      - proxy
+    depends_on:
+     api:
+        condition: service_started
+
+networks:
+  proxy:
+    external: true

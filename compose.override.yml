@@ -1,71 +1,80 @@
 services:
-  api:
-    image: ${API_IMAGE:-ghcr.io/atrakic/azure-go-app}:${API_RELEASE:-latest}
-    container_name: api
-    environment:
-      VIRTUAL_PORT: ${API_VIRTUAL_PORT:-5000}
-      VIRTUAL_HOST: ${API_VIRTUAL_HOST:-}
-      LETSENCRYPT_HOST: ${API_LETSENCRYPT_HOST:-}
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-
+  # https://github.com/nginx-proxy/acme-companion/blob/main/docs/Docker-Compose.md#two-containers-example
   nginx-proxy:
     image: nginxproxy/nginx-proxy:${NGINX_PROXY_RELEASE:-1.4}
     container_name: nginx-proxy
-    restart: unless-stopped
+    restart: always
     ports:
       - "80:80"
       - "443:443"
+    environment:
+      - NO_COLOR=1
     volumes:
-      - conf:/etc/nginx/conf.d
-      - vhost:/etc/nginx/vhost.d
+      # The vhost and conf volumes are only required
+      # if you plan to obtain standalone certificates
+      # - vhost:/etc/nginx/vhost.d
+      # - conf:/etc/nginx/conf.d
       - html:/usr/share/nginx/html
       - certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
-
-  nginx-proxy-acme:
+    networks:
+      - proxy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+  acme-companion:
     image: nginxproxy/acme-companion:${ACME_RELEASE:-latest}
     container_name: nginx-proxy-acme
+    restart: always
+    env_file:
+      - .env
     environment:
-      DEFAULT_EMAIL: ${DEFAULT_EMAIL:-mail@yourdomain.tld}
+      DEFAULT_EMAIL: ${DEFAULT_EMAIL:-foo@bar.org}
     volumes_from:
       - nginx-proxy
     volumes:
       - certs:/etc/nginx/certs:rw
       - acme:/etc/acme.sh
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
 
+  # https://containrrr.dev/watchtower/
   watchtower:
     image: containrrr/watchtower:${WATCHTOWER_RELEASE:-latest}
     container_name: watchtower
-    restart: unless-stopped
+    restart: always
     command: |
-      --interval 86400
+      --cleanup
+      --interval 3600
       --http-api-update
       --http-api-metrics
       --http-api-periodic-polls
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
     environment:
       WATCHTOWER_HTTP_API_TOKEN: "${WATCHTOWER_HTTP_API_TOKEN:-'$$RANDOM'}"
       WATCHTOWER_NOTIFICATION_URL: "${WATCHTOWER_NOTIFICATION_URL:-}"
+      WATCHTOWER_NOTIFICATION_REPORT: "true"
+      WATCHTOWER_NOTIFICATIONS_LEVEL: "${WATCHTOWER_NOTIFICATIONS_LEVEL:-info}"
       VIRTUAL_PORT: ${WATCHTOWER_VIRTUAL_PORT:-8080}
-      VIRTUAL_HOST: ${WATCHTOWER_VIRTUAL_HOST:-}
+      VIRTUAL_HOST: ${WATCHTOWER_VIRTUAL_HOST:-watchtower.local}
       LETSENCRYPT_HOST: ${WATCHTOWER_LETSENCRYPT_HOST:-}
-      #- WATCHTOWER_ROLLING_RESTART=true
-      #- WATCHTOWER_NOTIFICATIONS=msteams
-      #- WATCHTOWER_NOTIFICATION_MSTEAMS_USE_LOG_DATA=true
-      #- WATCHTOWER_NOTIFICATION_MSTEAMS_HOOK_URL="https://outlook.office.com/webhook/xxxxxxxx@xxxxxxx/IncomingWebhook/yyyyyyyy/zzzzzzzzzz" \
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
-
-networks:
-  default:
-    name: proxy
+    networks:
+      - proxy
 
 volumes:
-  conf:
-  vhost:
+  # vhost:
+  # conf:
   html:
   certs:
   acme:
+
+networks:
+  proxy:
+    external: true

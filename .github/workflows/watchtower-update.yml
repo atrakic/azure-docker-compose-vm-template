@@ -1,3 +1,4 @@
+name: watchtower update
 on:
   workflow_dispatch:
   #schedule:

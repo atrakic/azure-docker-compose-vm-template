@@ -1,0 +1,66 @@
+name: SSH Deploy
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main  # or your default branch
+
+env:
+  RUN_SERVICES: api # comma-separated list of services to run
+  ROOT_DIRECTORY: /opt
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # for env config
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Override .env file before deployment
+      run: |
+        echo "GIT_BRANCH=${{ github.ref }}" >> .env
+        echo "GIT_SHA=${{ github.sha }}" >> .env
+        ##echo "DOMAIN=${{ secrets.DOMAIN }}" >> .env
+
+    - name: Copy .env and docker-compose files to remote server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        source: ".env,compose.yml,compose.override.yml"
+        target: ${{ env.ROOT_DIRECTORY }}
+
+    - name: Deploy with Docker Compose
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script_stop: true
+        script: |
+          # Set permissions for .env and docker-compose files
+          sudo chmod 600 ${{ env.ROOT_DIRECTORY }}/.env
+          sudo chmod 644 ${{ env.ROOT_DIRECTORY }}/compose*.yml
+
+          cd ${{ env.ROOT_DIRECTORY }}
+          export COMPOSE_FILE="compose.yml:compose.override.yml"
+
+          # Authenticate Docker with GitHub Container Registry
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+          # Deploy services in SERVICES
+          IFS=',' read -r SERVICES <<< "${{ env.RUN_SERVICES }}"
+          for service in "${SERVICES[@]}"; do
+            docker-compose pull "$service"
+            docker-compose up -d --no-deps --build --remove-orphans "$service"
+          done
+
+          # Remove orphaned Docker containers
+          docker container prune -f
+          docker image prune -af
