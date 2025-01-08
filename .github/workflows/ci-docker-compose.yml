@@ -15,4 +15,5 @@ jobs:
       - name: Build the stack
         run: |
           export COMPOSE_FILE=compose.yml:compose.sut.yml
+          docker network create proxy
           DOCKER_BUILDKIT=1 docker compose up --quiet-pull --no-color --remove-orphans --exit-code-from ${{ env.APP }}
