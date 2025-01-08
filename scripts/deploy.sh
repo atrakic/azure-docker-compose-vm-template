@@ -1,8 +1,8 @@
 #!/bin/bash
 set -exo pipefail
 
+export COMPOSE_FILE=compose.yml:compose.override.yml
+
 docker network create proxy || true
-docker compose \
-    -f docker-compose.yml \
-    -f apps.yml \
-    up --remove-orphans --no-color -d
+
+docker compose up --build --remove-orphans --quiet-pull --no-color -d

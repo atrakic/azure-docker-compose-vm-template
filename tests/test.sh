@@ -15,12 +15,12 @@ docker compose version
 docker compose config --quiet
 
 ## Build images (dont start them)
-docker compose  build
+docker compose build
 
 ## Start reverse proxy incl. main services using pinned version
 API_RELEASE=latest \
     docker compose up \
-    --build --remove-orphans -d
+    --quiet-pull --no-color --build --remove-orphans -d
 
 container="api"
 #while ! curl -o /dev/null -sf localhost;do sleep 1; done
